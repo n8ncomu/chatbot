@@ -1,0 +1,18 @@
+{
+  "name": "chatbot-ia",
+  "version": "1.0.0",
+  "description": "Chatbot con IA (LLaMA 4 via Groq) + RAG (Neon PostgreSQL) + Memoria (Upstash Redis). Proyecto didáctico IES Comuneros de Castilla.",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.0",
+    "@upstash/redis": "^1.31.0",
+    "groq-sdk": "^0.5.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
