@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel de Administración — Chatbot IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --surface2: #1e2230;
+      --border: #2a2f3d;
+      --accent: #4f7cff;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 10% 10%, rgba(79,124,255,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 90%, rgba(167,139,250,0.05) 0%, transparent 60%);
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 20px;
+    }
+    #login-screen h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #4f7cff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #login-screen p { color: var(--muted); font-size: 0.9rem; }
+
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .login-box label { font-size: 0.85rem; color: var(--muted); }
+    .login-box input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .login-box input:focus { border-color: var(--accent); }
+
+    /* ── Main layout ── */
+    #app { display: none; max-width: 900px; margin: 0 auto; }
+    #app.visible { display: block; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #4f7cff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header small { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, rgba(79,124,255,0.2), rgba(167,139,250,0.2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    /* ── Form ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+    .form-group input, .form-group textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+    .btn-danger  { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Alert ── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      display: none;
+    }
+    .alert.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--green); }
+    .alert.error   { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--red); }
+    .alert.visible { display: block; }
+
+    /* ── Document list ── */
+    #doc-list { display: flex; flex-direction: column; gap: 10px; }
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .doc-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, rgba(79,124,255,0.15), rgba(167,139,250,0.15));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-name { font-size: 0.88rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-preview { font-size: 0.75rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-date { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+
+    #empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    /* ── Stats ── */
+    .stats-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+    .stat-card {
+      flex: 1;
+      min-width: 140px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .stat-card .val {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    a { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <div style="text-align:center;">
+    <h1>Panel de Administración</h1>
+    <p>Chatbot IA · IES Comuneros de Castilla</p>
+  </div>
+  <div class="login-box">
+    <div class="form-group">
+      <label>Contraseña de administrador</label>
+      <input type="password" id="pw-input" placeholder="••••••••" />
+    </div>
+    <button class="btn btn-primary" id="login-btn">Entrar →</button>
+    <div class="alert" id="login-alert"></div>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div id="app">
+  <header>
+    <div>
+      <h1>Panel de Administración</h1>
+      <small>Gestiona los documentos de la base de conocimiento del chatbot</small>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a href="test.html">← Ver chatbot</a>
+      <button class="btn btn-danger" id="logout-btn">Salir</button>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="val" id="stat-docs">—</div>
+      <div class="label">Fragmentos indexados</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="stat-status">●</div>
+      <div class="label">Estado del servicio</div>
+    </div>
+  </div>
+
+  <!-- Indexar documento -->
+  <div class="card">
+    <h2><span class="icon">📄</span> Indexar nuevo documento</h2>
+    <div class="form-group">
+      <label>Nombre del documento</label>
+      <input type="text" id="doc-name" placeholder="Ej: normativa-admision-2025" />
+    </div>
+    <div class="form-group">
+      <label>Contenido del documento (pega el texto aquí)</label>
+      <textarea id="doc-content" placeholder="Selecciona todo el texto de tu PDF o documento (Ctrl+A, Ctrl+C) y pégalo aquí..."></textarea>
+    </div>
+    <button class="btn btn-primary" id="index-btn">Indexar documento</button>
+    <div class="alert" id="index-alert"></div>
+  </div>
+
+  <!-- Lista de documentos -->
+  <div class="card">
+    <h2><span class="icon">🗂️</span> Documentos indexados</h2>
+    <div id="doc-list">
+      <div id="empty-state">Cargando documentos...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = window.location.origin;
+  let adminPassword = '';
+
+  // ── Auth ──
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const pw = document.getElementById('pw-input').value.trim();
+    if (!pw) return;
+
+    const alert = document.getElementById('login-alert');
+    try {
+      const res = await fetch(`${API_URL}/api/index-doc`, {
+        headers: { Authorization: `Bearer ${pw}` }
+      });
+      if (res.ok) {
+        adminPassword = pw;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').classList.add('visible');
+        loadDocuments();
+      } else {
+        alert.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+        alert.className = 'alert error visible';
+      }
+    } catch {
+      alert.textContent = 'Error de conexión con el servidor.';
+      alert.className = 'alert error visible';
+    }
+  });
+
+  document.getElementById('pw-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    adminPassword = '';
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('pw-input').value = '';
+  });
+
+  // ── Cargar documentos ──
+  async function loadDocuments() {
+    try {
+      const res = await fetch(`${API_URL}/api/index-doc`, {
+        headers: { Authorization: `Bearer ${adminPassword}` }
+      });
+      const data = await res.json();
+      const docs = data.documents || [];
+
+      document.getElementById('stat-docs').textContent = docs.length;
+      document.getElementById('stat-status').textContent = '● Activo';
+      document.getElementById('stat-status').style.color = '#34d399';
+
+      const list = document.getElementById('doc-list');
+      if (docs.length === 0) {
+        list.innerHTML = '<div id="empty-state">No hay documentos indexados todavía. Añade el primero.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      docs.forEach(doc => {
+        const item = document.createElement('div');
+        item.className = 'doc-item';
+        const date = new Date(doc.created_at).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+        item.innerHTML = `
+          <div class="doc-icon">📄</div>
+          <div class="doc-info">
+            <div class="doc-name">${escapeHtml(doc.name)}</div>
+            <div class="doc-preview">${escapeHtml(doc.preview)}...</div>
+            <div class="doc-date">${date}</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteDoc(${doc.id}, '${escapeHtml(doc.name)}')">Eliminar</button>
+        `;
+        list.appendChild(item);
+      });
+    } catch {
+      document.getElementById('doc-list').innerHTML = '<div id="empty-state" style="color:#f87171;">Error cargando documentos.</div>';
+    }
+  }
+
+  // ── Indexar documento ──
+  document.getElementById('index-btn').addEventListener('click', async () => {
+    const name    = document.getElementById('doc-name').value.trim();
+    const content = document.getElementById('doc-content').value.trim();
+    const alert   = document.getElementById('index-alert');
+    const btn     = document.getElementById('index-btn');
+
+    if (!name || !content) {
+      alert.textContent = 'Rellena el nombre y el contenido del documento.';
+      alert.className = 'alert error visible';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Indexando...';
+    alert.className = 'alert';
+
+    try {
+      const res = await fetch(`${API_URL}/api/index-doc`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminPassword}`
+        },
+        body: JSON.stringify({ name, content })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        alert.textContent = `✓ ${data.message}`;
+        alert.className = 'alert success visible';
+        document.getElementById('doc-name').value = '';
+        document.getElementById('doc-content').value = '';
+        loadDocuments();
+      } else {
+        alert.textContent = `Error: ${data.error || 'Algo salió mal.'}`;
+        alert.className = 'alert error visible';
+      }
+    } catch {
+      alert.textContent = 'Error de conexión con el servidor.';
+      alert.className = 'alert error visible';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Indexar documento';
+    }
+  });
+
+  // ── Eliminar documento ──
+  async function deleteDoc(id, name) {
+    if (!confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await fetch(`${API_URL}/api/index-doc`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminPassword}`
+        },
+        body: JSON.stringify({ id })
+      });
+      loadDocuments();
+    } catch {
+      alert('Error al eliminar el documento.');
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot IA — Prueba</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #161920;
+      --surface2: #1e2230;
+      --border: #2a2f3d;
+      --accent: #4f7cff;
+      --accent2: #a78bfa;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --user-bg: #1a2340;
+      --bot-bg: #1e2230;
+      --radius: 16px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 20% 20%, rgba(79,124,255,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(167,139,250,0.07) 0%, transparent 60%);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.03em;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 8px;
+      font-weight: 300;
+    }
+
+    /* ── Chat container ── */
+    #chat-container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      height: 560px;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,124,255,0.1);
+      overflow: hidden;
+    }
+
+    #chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    #chat-header span {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    #chat-header small {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .msg {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      animation: fadeUp 0.25s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--user-bg);
+      border: 1px solid rgba(79,124,255,0.25);
+      border-bottom-right-radius: 4px;
+    }
+    .msg.bot {
+      align-self: flex-start;
+      background: var(--bot-bg);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg.bot .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      background: rgba(79,124,255,0.15);
+      color: var(--accent);
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 5px;
+      padding: 14px 16px;
+      align-self: flex-start;
+      background: var(--bot-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      border-bottom-left-radius: 4px;
+    }
+    .typing-indicator span {
+      width: 7px; height: 7px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    #input-area {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      background: var(--surface2);
+    }
+    #user-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+      height: 48px;
+      min-height: 48px;
+      max-height: 120px;
+    }
+    #user-input:focus { border-color: var(--accent); }
+    #user-input::placeholder { color: var(--muted); }
+
+    #send-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 10px;
+      width: 48px; height: 48px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    #send-btn:hover { opacity: 0.85; }
+    #send-btn:active { transform: scale(0.95); }
+    #send-btn svg { width: 20px; height: 20px; fill: white; }
+
+    /* ── Widget flotante embebible ── */
+    #widget-trigger {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(79,124,255,0.4);
+      transition: transform 0.2s;
+      z-index: 1000;
+    }
+    #widget-trigger:hover { transform: scale(1.08); }
+    #widget-trigger svg { width: 24px; height: 24px; fill: white; }
+
+    footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Chatbot IA</h1>
+    <p>Asistente inteligente con base de conocimiento · IES Comuneros de Castilla</p>
+  </header>
+
+  <div id="chat-container">
+    <div id="chat-header">
+      <div class="dot"></div>
+      <span>Asistente IA</span>
+      <small>Powered by LLaMA 4 · Groq</small>
+    </div>
+    <div id="messages">
+      <div class="msg bot">
+        <div class="badge">IA</div>
+        <div>¡Hola! Soy tu asistente inteligente. Puedo responder preguntas basándome en los documentos indexados. ¿En qué puedo ayudarte?</div>
+      </div>
+    </div>
+    <div id="input-area">
+      <textarea id="user-input" placeholder="Escribe tu pregunta..." rows="1"></textarea>
+      <button id="send-btn" title="Enviar">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <footer>
+    Proyecto desarrollado en el IES Comuneros de Castilla, Burgos · Curso 2025-2026<br/>
+    <a href="admin.html">Panel de administración →</a>
+  </footer>
+
+  <script>
+    // ── Configuración ──
+    const API_URL = window.location.origin; // Apunta automáticamente a tu dominio Vercel
+    const sessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
+
+    const messagesEl = document.getElementById('messages');
+    const inputEl    = document.getElementById('user-input');
+    const sendBtn    = document.getElementById('send-btn');
+
+    function addMessage(text, role, docsUsed) {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      if (role === 'bot') {
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = docsUsed > 0 ? `IA · ${docsUsed} doc(s) usados` : 'IA';
+        div.appendChild(badge);
+      }
+      const content = document.createElement('div');
+      content.textContent = text;
+      div.appendChild(content);
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function showTyping() {
+      const div = document.createElement('div');
+      div.className = 'typing-indicator';
+      div.id = 'typing';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeTyping() {
+      const t = document.getElementById('typing');
+      if (t) t.remove();
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      inputEl.value = '';
+      inputEl.style.height = '48px';
+      sendBtn.disabled = true;
+      showTyping();
+
+      try {
+        const res = await fetch(`${API_URL}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sessionId })
+        });
+        const data = await res.json();
+        removeTyping();
+        if (data.reply) {
+          addMessage(data.reply, 'bot', data.docsUsed || 0);
+        } else {
+          addMessage('Lo siento, hubo un error al procesar tu mensaje.', 'bot', 0);
+        }
+      } catch (err) {
+        removeTyping();
+        addMessage('Error de conexión. Verifica que el servidor está activo.', 'bot', 0);
+      } finally {
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    inputEl.addEventListener('input', () => {
+      inputEl.style.height = '48px';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+    });
+  </script>
+
+  <!-- ══════════════════════════════════════════════════
+       WIDGET EMBEBIBLE — copia este bloque <script> en tu web
+       Pégalo justo antes de </body> y cambia VERCEL_URL
+  ═══════════════════════════════════════════════════════ -->
+  <script>
+  (function() {
+    const VERCEL_URL = window.location.origin; // ← Cambia esto por tu URL de Vercel en producción
+    const sessionId  = 'ws_' + Math.random().toString(36).substring(2, 11);
+
+    // Estilos del widget
+    const style = document.createElement('style');
+    style.textContent = `
+      #__chatbot-btn {
+        position:fixed;bottom:24px;right:24px;width:52px;height:52px;
+        background:linear-gradient(135deg,#4f7cff,#a78bfa);border-radius:50%;
+        cursor:pointer;display:flex;align-items:center;justify-content:center;
+        box-shadow:0 6px 20px rgba(79,124,255,0.45);z-index:9998;border:none;
+        transition:transform .2s;
+      }
+      #__chatbot-btn:hover{transform:scale(1.08);}
+      #__chatbot-btn svg{width:22px;height:22px;fill:white;}
+      #__chatbot-panel {
+        position:fixed;bottom:88px;right:24px;width:340px;height:480px;
+        background:#161920;border:1px solid #2a2f3d;border-radius:16px;
+        display:none;flex-direction:column;z-index:9999;
+        box-shadow:0 24px 48px rgba(0,0,0,0.6);overflow:hidden;
+        font-family:'DM Sans',sans-serif;
+      }
+      #__chatbot-panel.open{display:flex;}
+      .__cp-header{padding:14px 16px;background:#1e2230;border-bottom:1px solid #2a2f3d;
+        display:flex;align-items:center;gap:10px;color:#e8eaf0;font-size:.85rem;font-weight:600;}
+      .__cp-dot{width:8px;height:8px;border-radius:50%;background:#4f7cff;
+        box-shadow:0 0 6px #4f7cff;animation:__pulse 2s infinite;}
+      @keyframes __pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+      .__cp-close{margin-left:auto;background:none;border:none;color:#6b7280;
+        cursor:pointer;font-size:1.1rem;line-height:1;}
+      .__cp-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;
+        gap:10px;scrollbar-width:thin;scrollbar-color:#2a2f3d transparent;}
+      .__cp-msg{max-width:85%;padding:10px 13px;border-radius:10px;font-size:.85rem;line-height:1.5;}
+      .__cp-msg.user{align-self:flex-end;background:#1a2340;border:1px solid rgba(79,124,255,.25);
+        border-bottom-right-radius:3px;color:#e8eaf0;}
+      .__cp-msg.bot{align-self:flex-start;background:#1e2230;border:1px solid #2a2f3d;
+        border-bottom-left-radius:3px;color:#e8eaf0;}
+      .__cp-input-area{display:flex;gap:8px;padding:12px;border-top:1px solid #2a2f3d;background:#1e2230;}
+      .__cp-input{flex:1;background:#0d0f14;border:1px solid #2a2f3d;border-radius:8px;
+        padding:9px 12px;color:#e8eaf0;font-size:.85rem;outline:none;font-family:inherit;}
+      .__cp-input:focus{border-color:#4f7cff;}
+      .__cp-send{background:linear-gradient(135deg,#4f7cff,#a78bfa);border:none;
+        border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;
+        align-items:center;justify-content:center;flex-shrink:0;}
+      .__cp-send svg{width:16px;height:16px;fill:white;}
+    `;
+    document.head.appendChild(style);
+
+    // Botón flotante
+    const btn = document.createElement('button');
+    btn.id = '__chatbot-btn';
+    btn.title = 'Abrir chat';
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>';
+    document.body.appendChild(btn);
+
+    // Panel
+    const panel = document.createElement('div');
+    panel.id = '__chatbot-panel';
+    panel.innerHTML = `
+      <div class="__cp-header">
+        <div class="__cp-dot"></div>
+        <span>Asistente IA</span>
+        <button class="__cp-close" id="__cp-close-btn">✕</button>
+      </div>
+      <div class="__cp-msgs" id="__cp-msgs">
+        <div class="__cp-msg bot">¡Hola! ¿En qué puedo ayudarte?</div>
+      </div>
+      <div class="__cp-input-area">
+        <input class="__cp-input" id="__cp-input" placeholder="Escribe aquí..." />
+        <button class="__cp-send" id="__cp-send">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(panel);
+
+    btn.addEventListener('click', () => panel.classList.toggle('open'));
+    document.getElementById('__cp-close-btn').addEventListener('click', () => panel.classList.remove('open'));
+
+    async function wpSend() {
+      const input = document.getElementById('__cp-input');
+      const msgs  = document.getElementById('__cp-msgs');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      const addMsg = (t, role) => {
+        const d = document.createElement('div');
+        d.className = `__cp-msg ${role}`;
+        d.textContent = t;
+        msgs.appendChild(d);
+        msgs.scrollTop = msgs.scrollHeight;
+      };
+
+      addMsg(text, 'user');
+      input.value = '';
+
+      try {
+        const res  = await fetch(`${VERCEL_URL}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sessionId })
+        });
+        const data = await res.json();
+        addMsg(data.reply || 'Sin respuesta', 'bot');
+      } catch {
+        addMsg('Error de conexión.', 'bot');
+      }
+    }
+
+    document.getElementById('__cp-send').addEventListener('click', wpSend);
+    document.getElementById('__cp-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') wpSend();
+    });
+  })();
+  </script>
+
+</body>
+</html>
